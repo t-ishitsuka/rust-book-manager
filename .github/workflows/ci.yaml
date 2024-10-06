@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - "README.md"
+      - "frontend/**"
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: install
+        run: |
+          rustup toolchain install stable
+
+      - name: install cargo-related tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest, cargo-make
+
+      - name: tests compile
+        run: cargo make test-ci --no-run --locked
+
+      - name: test
+        run: cargo make test-ci
+
+      - name: clippy
+        run: cargo make clippy-ci -- -Dwarnings
+
+      - name: rustfmt
+        run: cargo make fmt -- --check
